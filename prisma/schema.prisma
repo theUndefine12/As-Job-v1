@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employees {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String
+  resume   Resume  @relation(fields: [resumeId], references: [id])
+  resumeId Int
+}
+
+model Employer {
+  id        Int        @id @default(autoincrement())
+  name      String?
+  email     String     @unique
+  password  String
+  vacations Vacation[]
+}
+
+model Admin {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  password String
+}
+
+model Country {
+  id         Int        @id @default(autoincrement())
+  name       String
+  categories Category[]
+}
+
+model Category {
+  id         Int         @id @default(autoincrement())
+  name       String
+  count      Int         @default(0)
+  directions Direction[]
+  Country    Country?    @relation(fields: [countryId], references: [id])
+  countryId  Int?
+}
+
+model Direction {
+  id         Int        @id @default(autoincrement())
+  name       String
+  Category   Category?  @relation(fields: [categoryId], references: [id])
+  categoryId Int?
+  vacations  Vacation[]
+}
+
+model Vacation {
+  id          Int        @id @default(autoincrement())
+  Employer    Employer?  @relation(fields: [employerId], references: [id])
+  employerId  Int?
+  Direction   Direction? @relation(fields: [directionId], references: [id])
+  directionId Int?
+}
+
+model Resume {
+  id         Int         @id @default(autoincrement())
+  name       String
+  surname    String
+  bio        String
+  profession String
+  contacts   String
+  country    String
+  Employees  Employees[]
+}
