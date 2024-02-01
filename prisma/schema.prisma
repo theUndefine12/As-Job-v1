@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,20 +8,25 @@ datasource db {
 }
 
 model Employees {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  name     String?
-  password String
-  resume   Resume  @relation(fields: [resumeId], references: [id])
-  resumeId Int
+  id             Int         @id @default(autoincrement())
+  email          String      @unique
+  name           String?
+  password       String
+  country        String
+  phone          String
+  resume         Resume[]
+  responcesCount Int         @default(0)
+  responces      Vacation[]
+  Favorites      Favorites[]
 }
 
 model Employer {
-  id        Int        @id @default(autoincrement())
-  name      String?
-  email     String     @unique
-  password  String
-  vacations Vacation[]
+  id             Int        @id @default(autoincrement())
+  name           String?
+  email          String     @unique
+  password       String
+  vacationsCount Int        @default(0)
+  vacations      Vacation[]
 }
 
 model Admin {
@@ -43,34 +45,47 @@ model Category {
   id         Int         @id @default(autoincrement())
   name       String
   count      Int         @default(0)
-  directions Direction[]
-  Country    Country?    @relation(fields: [countryId], references: [id])
   countryId  Int?
+  Country    Country?    @relation(fields: [countryId], references: [id])
+  directions Direction[]
 }
 
 model Direction {
   id         Int        @id @default(autoincrement())
   name       String
-  Category   Category?  @relation(fields: [categoryId], references: [id])
   categoryId Int?
+  Category   Category?  @relation(fields: [categoryId], references: [id])
   vacations  Vacation[]
 }
 
 model Vacation {
-  id          Int        @id @default(autoincrement())
-  Employer    Employer?  @relation(fields: [employerId], references: [id])
+  id          Int         @id @default(autoincrement())
   employerId  Int?
-  Direction   Direction? @relation(fields: [directionId], references: [id])
   directionId Int?
+  Direction   Direction?  @relation(fields: [directionId], references: [id])
+  Employer    Employer?   @relation(fields: [employerId], references: [id])
+  employeesId Int?
+  Favorites   Favorites?  @relation(fields: [favoritesId], references: [id])
+  favoritesId Int?
+  responces   Employees[]
 }
 
 model Resume {
-  id         Int         @id @default(autoincrement())
-  name       String
-  surname    String
-  bio        String
-  profession String
-  contacts   String
-  country    String
-  Employees  Employees[]
+  id          Int       @id @default(autoincrement())
+  name        String
+  surname     String
+  bio         String
+  profession  String
+  contacts    String
+  country     String
+  owner       Employees @relation(fields: [employeesId], references: [id])
+  employeesId Int
+}
+
+model Favorites {
+  id          Int        @id @default(autoincrement())
+  count       Int        @default(0)
+  vacations   Vacation[]
+  owner       Employees  @relation(fields: [employeesId], references: [id])
+  employeesId Int
 }
