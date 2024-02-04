@@ -25,6 +25,10 @@ export const signUp = asyncHandler(async (req, res) => {
             data: { name, email, country, phone, password: hash }
         })
 
+        await prisma.favorites.create({
+            data: { owner: employees.id }
+        })
+
         const token = generateToken(employees.id)
         res.status(200).json({ message: 'Employees is Saved', token })
     } catch (error) {

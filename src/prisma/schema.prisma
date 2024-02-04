@@ -37,13 +37,13 @@ model Admin {
 
 model Country {
   id         Int        @id @default(autoincrement())
-  name       String
+  name       String     @unique
   categories Category[]
 }
 
 model Category {
   id         Int         @id @default(autoincrement())
-  name       String
+  name       String      @unique
   count      Int         @default(0)
   countryId  Int?
   Country    Country?    @relation(fields: [countryId], references: [id])
@@ -76,10 +76,10 @@ model Resume {
   surname     String
   bio         String
   profession  String
-  contacts    String
+  contacts    String[]
   country     String
   owner       Employees @relation(fields: [employeesId], references: [id])
-  employeesId Int
+  employeesId Int       @unique
 }
 
 model Favorites {
