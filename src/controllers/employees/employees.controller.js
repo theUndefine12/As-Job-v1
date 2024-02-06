@@ -10,7 +10,7 @@ export const signUp = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { name, email, country, phone, password } = req.body
+    const { name, email, country, gender, phone, password } = req.body
 
     try {
         const isHave = await prisma.employees.findUnique({
@@ -22,11 +22,15 @@ export const signUp = asyncHandler(async (req, res) => {
 
         const hash = bcrypt.hashSync(password, 7)
         const employees = new prisma.employees.create({
-            data: { name, email, country, phone, password: hash }
+            data: { name, email, country, phone, gender, password: hash }
         })
 
         await prisma.favorites.create({
-            data: { owner: employees.id }
+            data: { employeesId: employees.id }
+        })
+
+        await prisma.notice.create({
+            data: { employeesId: employees.id }
         })
 
         const token = generateToken(employees.id)

@@ -5,7 +5,11 @@ import prisma from '../../db/prisma.js'
 
 
 export const create = asyncHandler(async (req, res) => {
-    const { name } = req.body
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        res.status(400).json({ message: 'Please check your request', errors })
+    }
+    const { name, country } = req.body
 
     try {
         const isHave = await prisma.category.findUnique({
@@ -15,8 +19,10 @@ export const create = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'Category is already created' })
         }
 
+        let isCountry = await prisma.country.fin
+
         const category = await prisma.category.create({
-            data: { name: name }
+            data: { name: name, countryId: country }
         })
 
         res.status(200).json({ message: 'Category is Created', category })

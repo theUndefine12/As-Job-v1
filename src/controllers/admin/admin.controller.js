@@ -79,3 +79,23 @@ export const getProfile = asyncHandler(async (req, res) => {
     }
 })
 
+
+export const getEmployees = asyncHandler(async (req, res) => {
+    const employees = await prisma.employees.findMany()
+    res.status(200).json({ employees })
+})
+
+
+export const getEmployer = asyncHandler(async (req, res) => {
+    const employer = await prisma.employer.findMany()
+    res.status(200).json({ employer })
+})
+
+
+export const getAllVAcations = asyncHandler(async (req, res) => {
+    const vacations = await prisma.vacation.findMany()
+    res.status(200).json({ vacations })
+})
+
+
+
