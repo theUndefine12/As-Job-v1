@@ -16,26 +16,21 @@ model Employees {
   country        String
   phone          String
   gender         Gender
+  Chat           Chat[]
   Favorites      Favorites[]
+  Message        Message[]
+  Notice         Notice[]
   resume         Resume[]
   Review         Review[]
   responces      Vacation[]  @relation("EmployeesToVacation")
-  Notice         Notice[]
-  Chat           Chat[]
-  Message        Message[]
-}
-
-enum Gender {
-  Male
-  Female
 }
 
 model Notice {
   id          Int       @id @default(autoincrement())
   count       Int       @default(0)
   notices     String[]
-  owner       Employees @relation(fields: [employeesId], references: [id])
   employeesId Int
+  owner       Employees @relation(fields: [employeesId], references: [id])
 }
 
 model Employer {
@@ -44,9 +39,9 @@ model Employer {
   email          String     @unique
   password       String
   vacationsCount Int        @default(0)
-  vacations      Vacation[]
   Chat           Chat[]
   Message        Message[]
+  vacations      Vacation[]
 }
 
 model Admin {
@@ -58,6 +53,7 @@ model Admin {
 model Country {
   id         Int        @id @default(autoincrement())
   name       String
+  count      Int        @default(0)
   categories Category[]
 }
 
@@ -94,6 +90,9 @@ model Vacation {
   company        String
   contacts       String[]
   reviewsCount   Int         @default(0)
+  adresse        String
+  requirements   String[]
+  conditions     String[]
   reviews        Review[]
   direction      Direction?  @relation(fields: [directionId], references: [id])
   employer       Employer?   @relation(fields: [employerId], references: [id])
@@ -134,22 +133,27 @@ model Favorites {
 
 model Chat {
   id          Int       @id @default(autoincrement())
-  employer    Employer  @relation(fields: [employerId], references: [id])
-  employee    Employees @relation(fields: [employeesId], references: [id])
-  messages    Message[]
   employerId  Int
   employeesId Int
+  employee    Employees @relation(fields: [employeesId], references: [id])
+  employer    Employer  @relation(fields: [employerId], references: [id])
+  messages    Message[]
 }
 
 model Message {
   id          Int       @id @default(autoincrement())
   text        String
   viewed      Boolean   @default(false)
-  employer    Employer  @relation(fields: [employerId], references: [id])
-  employee    Employees @relation(fields: [employeesId], references: [id])
   createdAt   DateTime  @default(now())
-  Chat        Chat?     @relation(fields: [chatId], references: [id])
   chatId      Int?
   employerId  Int
   employeesId Int
+  Chat        Chat?     @relation(fields: [chatId], references: [id])
+  employee    Employees @relation(fields: [employeesId], references: [id])
+  employer    Employer  @relation(fields: [employerId], references: [id])
+}
+
+enum Gender {
+  Male
+  Female
 }

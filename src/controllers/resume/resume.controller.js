@@ -13,15 +13,17 @@ export const create = asyncHandler(async (req, res) => {
     const { name, surname, bio, profession, contacts, country } = req.body
 
     try {
-        const isHave = await prisma.resume.findUnique({
-            where: { owner: userId }
+        const isHave = await prisma.resume.findFirst({
+            where: { employeesId: userId }
         })
         if (isHave) {
             res.status(400).json({ message: 'Resume is created' })
         }
 
+        const contactsString = contacts.join(', ')
+
         const resume = await prisma.resume.create({
-            data: { name, surname, bio, profession, contacts, country, owner: userId }
+            data: { name, surname, bio, profession, contacts: contactsString, country, employeesId: userId }
         })
 
         res.status(200).json({ message: 'Resume is created', resume })
@@ -36,8 +38,12 @@ export const get = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
 
     try {
-        const resume = await prisma.resume.findUnique({
-            where: { owner: userId }
+        const resume = await prisma.resume.findFirst({
+            where: { employeesId: userId },
+            select: {
+                name: true, surname: true, bio: true, profession: true,
+                contacts: true, country: true
+            }
         })
 
         if (!resume) {
@@ -57,8 +63,8 @@ export const update = asyncHandler(async (req, res) => {
     const data = req.body
 
     try {
-        const resume = await prisma.resume.findUnique({
-            where: { owner: userId }
+        const resume = await prisma.resume.findFirst({
+            where: { employeesId: userId }
         })
 
         if (!resume) {
@@ -66,7 +72,7 @@ export const update = asyncHandler(async (req, res) => {
         }
 
         const updated = await prisma.resume.update({
-            where: { owner: userId },
+            where: { id: resume.id },
             data: data
         })
 
@@ -82,8 +88,8 @@ export const deleted = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
 
     try {
-        const resume = await prisma.resume.findUnique({
-            where: { owner: userId }
+        const resume = await prisma.resume.findFirst({
+            where: { employeesId: userId }
         })
 
         if (!resume) {
@@ -91,7 +97,7 @@ export const deleted = asyncHandler(async (req, res) => {
         }
 
         await prisma.resume.delete({
-            where: { owner: userId }
+            where: { id: resume.id }
         })
 
         res.status(200).json({ message: 'Resume is deleted' })

@@ -1,7 +1,7 @@
 import express from 'express'
-import { authSecurity } from '../../Middlewares/Auth.js'
-import { checkEmployer } from '../../Middlewares/Employer.js'
-import { get } from './favorite.controller.js'
+import { authSecurity } from '../../Middlewares/auth.middleware.js'
+import { checkEmployer } from '../../Middlewares/employer.middleware.js'
+import { get } from '../../controllers/favorite/favorite.controller.js'
 
 
 

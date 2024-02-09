@@ -1,8 +1,8 @@
 import express from 'express'
 import { check } from 'express-validator'
-import { authSecurity } from '../../Middlewares/Auth.js'
-import { checkAdmin } from '../../Middlewares/Admin.js'
-import { create, deleted, getAll, getOne } from './category.controller.js'
+import { authSecurity } from '../../Middlewares/auth.middleware.js'
+import { checkAdmin } from '../../Middlewares/admin.middleware.js.js'
+import { create, deleted, getAll, getOne } from '../../controllers/category/category.controller.js'
 
 
 

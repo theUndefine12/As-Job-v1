@@ -1,8 +1,8 @@
 import express from 'express'
 import { check } from 'express-validator'
-import { authSecurity } from '../../Middlewares/Auth.js'
-import { create, deleted, get, update } from './resume.controller.js'
-import { checkEmployees } from '../../Middlewares/Employees.js'
+import { authSecurity } from '../../Middlewares/auth.middleware.js'
+import { create, deleted, get, update } from '../../controllers/resume/resume.controller.js'
+import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
 
 
@@ -32,6 +32,6 @@ router.route('/').put(
 )
 
 router.route('/').get(authSecurity, checkEmployees, get)
-router.route('/').get(authSecurity, checkEmployees, deleted)
+router.route('/').delete(authSecurity, checkEmployees, deleted)
 
 export default router

@@ -14,20 +14,21 @@ export const signUp = asyncHandler(async (req, res) => {
 
     try {
         const isHave = await prisma.employer.findUnique({
-            where: { email }
+            where: { email: email }
         })
         if (isHave) {
             res.status(400).json({ message: 'Employer is already exist' })
         }
 
         const hash = bcrypt.hashSync(password, 7)
-        const employer = new prisma.employer.create({
+        const employer = await prisma.employer.create({
             data: { name, email, password: hash }
         })
 
         const token = generateToken(employer.id)
         res.status(200).json({ message: 'Employer is Signed', token })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
@@ -56,6 +57,7 @@ export const signIn = asyncHandler(async (req, res) => {
         const token = generateToken(employer.id)
         res.status(200).json({ message: 'Employer Succesfully', token })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
@@ -67,7 +69,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     try {
         const employer = await prisma.employer.findUnique({
             where: { id: userId },
-            select: { name, email }
+            select: { name: true, email: true, vacationsCount: true }
         })
         if (!employer) {
             res.status(404).json({ message: 'Employer is not Found' })
@@ -75,6 +77,7 @@ export const getProfile = asyncHandler(async (req, res) => {
 
         res.status(200).json({ employer })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
     }
 })

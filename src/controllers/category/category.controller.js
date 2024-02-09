@@ -12,17 +12,22 @@ export const create = asyncHandler(async (req, res) => {
     const { name, country } = req.body
 
     try {
-        const isHave = await prisma.category.findUnique({
-            where: { name }
+        const isHave = await prisma.category.findFirst({
+            where: { name: name }
         })
         if (isHave) {
             res.status(404).json({ message: 'Category is already created' })
         }
 
-        let isCountry = await prisma.country.fin
+        let isCountry = await prisma.country.findFirst({
+            where: { name: country }
+        })
+        if (!isCountry) {
+            res.status(404).json({ message: 'Country is not found' })
+        }
 
         const category = await prisma.category.create({
-            data: { name: name, countryId: country }
+            data: { name: name, countryId: isCountry.id }
         })
 
         res.status(200).json({ message: 'Category is Created', category })
@@ -34,17 +39,20 @@ export const create = asyncHandler(async (req, res) => {
 
 
 export const getAll = asyncHandler(async (req, res) => {
-    const categories = await prisma.category.findMany()
+    const categories = await prisma.category.findMany({
+        select: { id: true, name: true, count: true }
+    })
     res.status(200).json({ categories })
 })
 
 
 export const getOne = asyncHandler(async (req, res) => {
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const category = await prisma.category.findUnique({
-            where: { id: id }
+            where: { id: id },
+            select: { id: true, name: true, count: true, directions: true }
         })
         if (!category) {
             res.status(404).json({ message: 'Category is not found' })

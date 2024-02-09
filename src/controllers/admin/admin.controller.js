@@ -13,21 +13,22 @@ export const signUp = asyncHandler(async (req, res) => {
     const { name, password } = req.body
 
     try {
-        const isHave = await prisma.admin.findUnique({
-            where: { name }
+        const isHave = await prisma.admin.findFirst({
+            where: { name: name }
         })
         if (isHave) {
             res.status(400).json({ message: 'User is already exist' })
         }
 
         const hash = bcrypt.hashSync(password, 7)
-        const admin = new prisma.admin.create({
+        const admin = await prisma.admin.create({
             data: { name, password: hash }
         })
 
         const token = generateToken(admin.id)
         res.status(200).json({ message: 'Admin is Signed', token })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
@@ -41,8 +42,8 @@ export const signIn = asyncHandler(async (req, res) => {
     const { name, password } = req.body
 
     try {
-        const admin = await prisma.admin.findUnique({
-            where: { name }
+        const admin = await prisma.admin.findFirst({
+            where: { name: name }
         })
         if (!admin) {
             res.status(404).json({ message: 'Admin is not Found' })
@@ -67,7 +68,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     try {
         const admin = await prisma.admin.findUnique({
             where: { id: userId },
-            select: { name }
+            select: { id: true, name: true }
         })
         if (!admin) {
             res.status(404).json({ message: 'Admin is not Found' })
@@ -93,7 +94,9 @@ export const getEmployer = asyncHandler(async (req, res) => {
 
 
 export const getAllVAcations = asyncHandler(async (req, res) => {
-    const vacations = await prisma.vacation.findMany()
+    const vacations = await prisma.vacation.findMany({
+        select: { id: true, name: true, salary: true, company: true, proffesion: true }
+    })
     res.status(200).json({ vacations })
 })
 

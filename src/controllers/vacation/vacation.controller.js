@@ -10,27 +10,25 @@ export const createVacation = asyncHandler(async (req, res) => {
         res.status(400).json({ message: 'Please check your request', errors })
     }
     const userId = parseInt(req.userId)
-    const { name, proffesion, salary, description, direction, contacts } = req.body
+    const { name, proffesion, salary, description, direction, contacts, company, conditions, requirements, adresse } = req.body
 
     try {
-        const isHave = await prisma.vacation.findUnique({
+        const isHave = await prisma.vacation.findFirst({
             where: { name: name }
         })
         if (isHave) {
             res.status(400).json({ message: 'vacation is created already' })
         }
 
-        let isDirection = await prisma.direction.findFirst({
+        const isDirection = await prisma.direction.findFirst({
             where: { name: direction }
         })
         if (!isDirection) {
-            isDirection = await prisma.direction.create({
-                data: { name: direction }
-            })
+            res.status(404).json({ message: 'Direction is not found' })
         }
 
         const vacation = await prisma.vacation.create({
-            data: { name, proffesion, salary, description, Direction: isDirection.name, employerId: userId, contacts }
+            data: { name, proffesion, salary, description, directionId: isDirection.id, employerId: userId, contacts, company, conditions, requirements, adresse }
         })
 
         await prisma.employer.update({
@@ -46,7 +44,7 @@ export const createVacation = asyncHandler(async (req, res) => {
         })
 
         await prisma.direction.update({
-            where: { name: isDirection.name },
+            where: { id: isDirection.id },
             data: {
                 vacationCount: {
                     increment: 1
@@ -66,12 +64,12 @@ export const createVacation = asyncHandler(async (req, res) => {
 
 
 export const getVacation = asyncHandler(async (req, res) => {
-    const { id } = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { contacts: false }
+            select: { name: true, salary: true, company: true, description: true, proffesion: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -81,6 +79,24 @@ export const getVacation = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry Error in Server' })
+    }
+})
+
+export const myVacations = asyncHandler(async (req, res) => {
+    const userId = parseInt(req.userId)
+
+    try {
+        const vacations = await prisma.vacation.findMany({
+            where: { employerId: userId },
+            select: { id: true, name: true, salary: true, company: true }
+        })
+        if (!vacations) {
+            res.status(404).json({ message: 'Vacation is not found' })
+        }
+
+        res.status(200).json({ vacations })
+    } catch (error) {
+        res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
 
@@ -180,11 +196,12 @@ export const unlikeVacation = asyncHandler(async (req, res) => {
 
 export const responce = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
-    const { id } = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const employees = await prisma.employees.findUnique({
-            where: { id: userId }
+            where: { id: userId },
+            include: { responces: true }
         })
         if (!employees) {
             res.status(404).json({ message: 'Employees is not found' })
@@ -192,15 +209,16 @@ export const responce = asyncHandler(async (req, res) => {
 
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { contacts: false }
+            select: { responces: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }
 
-        const isHave = vacation.responces.some(employee => employee.id === userId)
+        const isHave = vacation.responces.some(empl => empl.id === userId)
         if (isHave) {
             res.status(400).json({ message: 'Employees is responced to vacation already' })
+            return
         }
 
         await prisma.vacation.update({
@@ -222,7 +240,7 @@ export const responce = asyncHandler(async (req, res) => {
                     increment: 1
                 },
                 responces: {
-                    connect: { id: vacation.id }
+                    connect: { id: id }
                 }
             }
         })
@@ -237,29 +255,29 @@ export const responce = asyncHandler(async (req, res) => {
 
 export const unResponce = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
-
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            include: { responces: true },
-            select: { contacts: false }
+            include: { responces: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }
 
         const employees = await prisma.employees.findUnique({
-            where: { id: userId }
+            where: { id: userId },
+            include: { responces: true }
         })
         if (!employees) {
             res.status(404).json({ message: 'Employees is not found' })
         }
 
-        const isResponced = vacation.responces.includes(userId)
+        const isResponced = vacation.responces.some(empl => empl.id === userId)
         if (!isResponced) {
             res.status(400).json({ message: 'Employees is not responced' })
+            return
         }
 
         await prisma.employees.update({
@@ -269,7 +287,7 @@ export const unResponce = asyncHandler(async (req, res) => {
                     decrement: 1
                 },
                 responces: {
-                    disconnect: { id: vacation.id }
+                    disconnect: { id: id }
                 }
             }
         })
@@ -288,7 +306,7 @@ export const unResponce = asyncHandler(async (req, res) => {
 
         const unResponced = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { contacts: false, responces: false, reviews: false }
+            select: { name: true, salary: true, company: true, description: true, proffesion: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
 
         res.status(200).json({ unResponced })
@@ -300,7 +318,7 @@ export const unResponce = asyncHandler(async (req, res) => {
 
 
 export const showContacts = asyncHandler(async (req, res) => {
-    const { id } = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const vacation = await prisma.vacation.findUnique({
@@ -320,8 +338,12 @@ export const showContacts = asyncHandler(async (req, res) => {
 
 
 export const putReview = asyncHandler(async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        res.status(400).json({ message: 'Please check your request', errors })
+    }
     const userId = parseInt(req.userId)
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
     const { text } = req.body
 
     try {
@@ -333,8 +355,7 @@ export const putReview = asyncHandler(async (req, res) => {
         }
 
         const vacation = await prisma.vacation.findUnique({
-            where: { id: id },
-            select: { contacts: false }
+            where: { id: id }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -369,15 +390,14 @@ export const putReview = asyncHandler(async (req, res) => {
 
 
 export const getReviews = asyncHandler(async (req, res) => {
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { reviews: true, reviewsCount: true },
-            include: {
-                reviews: {
-                    select: { vacationId: false }
+            select: {
+                reviewsCount: true, reviews: {
+                    select: { id: true, text: true, createdAt: true, employeesId: true }
                 }
             }
         })
@@ -451,33 +471,32 @@ export const updateVacation = asyncHandler(async (req, res) => {
         res.status(400).json({ message: 'Please check your request', errors })
     }
     const userId = parseInt(req.userId)
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
     const data = req.body
 
     try {
         const vacation = await prisma.vacation.findUnique({
-            where: { id: id },
-            select: { contacts: false }
+            where: { id: id }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }
 
-        const employer = await prisma.employer({
+        const employer = await prisma.employer.findUnique({
             where: { id: userId }
         })
         if (!employer) {
             res.status(404).json({ message: 'Please check your token' })
         }
 
-        const isOwner = vacation.employerId.toString() === userId
+        const isOwner = vacation.employerId === userId
         if (!isOwner) {
             res.status(400).json({ message: 'You have not rights for this' })
         }
 
         const updated = await prisma.vacation.update({
             where: { id: id },
-            data: { data }
+            data: data
         })
 
         res.status(200).json({ message: 'Vacation is updated', updated })
@@ -490,31 +509,30 @@ export const updateVacation = asyncHandler(async (req, res) => {
 
 export const deleteVacation = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
-    const id = parseInt(req.params)
+    const id = parseInt(req.params.id)
 
     try {
         const vacation = await prisma.vacation.findUnique({
-            where: { id: id },
-            select: { contacts: false }
+            where: { id: id }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }
 
-        const employer = await prisma.employer({
+        const employer = await prisma.employer.findUnique({
             where: { id: userId }
         })
         if (!employer) {
             res.status(404).json({ message: 'Please check your token' })
         }
 
-        const isOwner = vacation.employerId.toString() === userId
+        const isOwner = vacation.employerId === userId
         if (!isOwner) {
             res.status(400).json({ message: 'You have not rights for this' })
         }
 
         await prisma.vacation.delete({
-            where: { id: id }
+            where: { id: vacation.id }
         })
 
         res.status(200).json({ message: 'Vacation is deleted' })
@@ -525,18 +543,17 @@ export const deleteVacation = asyncHandler(async (req, res) => {
 })
 
 
-export const getResponced = asyncHandler(async (req, res) => {
-    const id = parseInt(req.params)
+export const getResponces = asyncHandler(async (req, res) => {
+    const id = parseInt(req.params.id)
 
     try {
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            include: {
-                responces: {
+            select: {
+                responcesCount: true, responces: {
                     select: { id: true, name: true, country: true, phone: true, gender: true }
                 }
-            },
-            select: { responcesCount: true, responces: true }
+            }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -551,8 +568,8 @@ export const getResponced = asyncHandler(async (req, res) => {
 
 
 export const refuseEmployees = asyncHandler(async (req, res) => {
-    const id = parseInt(req.params)
-    const employeeId = parseInt(req.params)
+    const id = parseInt(req.params.id)
+    const employeeId = parseInt(req.params.id)
     const userId = parseInt(req.userId)
 
     try {
@@ -563,13 +580,21 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
                     select: { id: true, name: true }
                 }
             },
-            select: { contacts: false }
+            // select: { contacts: false }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }
 
-        const notice = await prisma.notice.findUnique({
+        const employee = await prisma.employees.findUnique({
+            where: { id: employeeId },
+            select: { responces: true }
+        })
+        if (!employee) {
+            res.status(404).json({ message: 'Employee is not found' })
+        }
+
+        const notice = await prisma.notice.findFirst({
             where: { employeesId: employeeId }
         })
         if (!notice) {
@@ -605,7 +630,7 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
                     decrement: 1
                 },
                 responces: {
-                    disconnect: { id: vacation.id }
+                    disconnect: { id: id }
                 }
             }
         })

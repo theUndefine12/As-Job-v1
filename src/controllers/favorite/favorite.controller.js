@@ -8,8 +8,9 @@ export const get = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
 
     try {
-        const favorite = await prisma.favorites.findUnique({
-            where: { owner: userId }
+        const favorite = await prisma.favorites.findFirst({
+            where: { employeesId: userId },
+            select: { count: true, vacations: true }
         })
         if (!favorite) {
             res.status(404).json({ message: 'Favorite is not found' })

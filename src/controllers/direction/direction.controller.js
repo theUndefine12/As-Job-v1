@@ -9,8 +9,8 @@ export const createDirection = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { id } = req.params
-    const { name } = req.body
+
+    const { name, category } = req.body
 
     try {
         const isHave = await prisma.direction.findFirst({
@@ -20,21 +20,19 @@ export const createDirection = asyncHandler(async (req, res) => {
             res.status(400).json({ message: 'Direction is already created' })
         }
 
-        let category = await prisma.category.findUnique({
-            where: { id: id }
+        const isCategory = await prisma.category.findFirst({
+            where: { name: category }
         })
         if (!category) {
-            category = await prisma.category.create({
-                data: { name: name }
-            })
+            res.status(404).json({ message: 'Category is not found' })
         }
 
         const direction = await prisma.direction.create({
-            data: { name: name, categoryId: category.id }
+            data: { name: name, categoryId: isCategory.id }
         })
 
         await prisma.category.update({
-            where: { id: category.id },
+            where: { id: isCategory.id },
             data: {
                 count: {
                     increment: 1
@@ -53,13 +51,26 @@ export const createDirection = asyncHandler(async (req, res) => {
 })
 
 
+export const getDirections = asyncHandler(async (req, res) => {
+    const directions = await prisma.direction.findMany({
+        select: { id: true, name: true, vacationCount: true },
+    })
+
+    res.status(200).json({ directions })
+})
+
+
 export const getDirection = asyncHandler(async (req, res) => {
-    const { id } = req.params
+    const id = parseInt(req.params.id)
 
     try {
         const direction = await prisma.direction.findUnique({
             where: { id: id },
-            include: { vacations: true }
+            select: {
+                id: true, name: true, vacationCount: true, vacations: {
+                    select: { id: true, name: true, salary: true, company: true }
+                }
+            }
         })
         if (!direction) {
             res.status(404).json({ message: 'Direction is not Found' })

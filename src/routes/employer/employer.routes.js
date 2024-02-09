@@ -1,7 +1,7 @@
 import epxress from 'express'
 import { check } from 'express-validator'
-import { authSecurity } from '../../Middlewares/Auth.js'
-import { getProfile, signIn, signUp } from './employer.controller.js'
+import { authSecurity } from '../../Middlewares/auth.middleware.js'
+import { getProfile, signIn, signUp } from '../../controllers/employer/employer.controller.js'
 
 
 

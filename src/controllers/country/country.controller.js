@@ -12,39 +12,44 @@ export const create = asyncHandler(async (req, res) => {
     const { name } = req.body
 
     try {
-        const isHave = await prisma.country.findUnique({
-            where: { name }
+        const isHave = await prisma.country.findFirst({
+            where: { name: name }
         })
         if (isHave) {
             res.status(400).json({ message: 'Country is created already ' })
         }
 
         const country = await prisma.country.create({
-            data: { name }
+            data: { name: name }
         })
 
         res.status(200).json({ message: 'Country is Saved', country })
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: 'Sorry Error in Sevrer ' })
+        res.status(500).json({ message: 'Sorry Error in Sevrer' })
     }
 })
 
 
 export const getAll = asyncHandler(async (req, res) => {
-    const countries = await prisma.country.findMany()
+    const countries = await prisma.country.findMany({
+        select: { id: true, name: true, count: true }
+    })
     res.status(200).json({ countries })
 })
 
 
 export const getOne = asyncHandler(async (req, res) => {
-    const { id } = req.params
+    const id = parseInt(req.params.id)
 
     try {
-        const countryId = parseInt(id)
         const country = await prisma.country.findUnique({
-            where: { id: countryId },
-            include: { categories }
+            where: { id: id },
+            select: {
+                id: true, name: true, count: true, categories: {
+                    select: { id: true, name: true, count: true }
+                }
+            }
         })
         if (!country) {
             res.status(404).json({ message: 'Country is not found' })
