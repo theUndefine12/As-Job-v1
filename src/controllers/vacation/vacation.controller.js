@@ -88,7 +88,8 @@ export const myVacations = asyncHandler(async (req, res) => {
     try {
         const vacations = await prisma.vacation.findMany({
             where: { employerId: userId },
-            select: { id: true, name: true, salary: true, company: true }
+            select: { id: true, name: true, salary: true, company: true },
+            orderBy: { createdAt: 'asc' }
         })
         if (!vacations) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -569,7 +570,7 @@ export const getResponces = asyncHandler(async (req, res) => {
 
 export const refuseEmployees = asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id)
-    const employeeId = parseInt(req.params.id)
+    const employeeId = parseInt(req.params.employeeId)
     const userId = parseInt(req.userId)
 
     try {
@@ -580,10 +581,10 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
                     select: { id: true, name: true }
                 }
             },
-            // select: { contacts: false }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
+            return
         }
 
         const employee = await prisma.employees.findUnique({
@@ -592,6 +593,7 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
         })
         if (!employee) {
             res.status(404).json({ message: 'Employee is not found' })
+            return
         }
 
         const notice = await prisma.notice.findFirst({
@@ -599,16 +601,19 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
         })
         if (!notice) {
             res.status(404).json({ message: 'Error in Notice Please check your employeeId token' })
+            return
         }
 
         const isHave = vacation.responces.some(employee => employee.id === employeeId)
         if (!isHave) {
             res.status(404).json({ message: 'Employee is not responced' })
+            return
         }
 
-        const isOwner = vacation.employerId.toString() === userId
+        const isOwner = vacation.employerId === userId
         if (!isOwner) {
             res.status(400).json({ message: 'You have not right for this' })
+            return
         }
 
         await prisma.vacation.update({
@@ -635,17 +640,22 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
             }
         })
 
-        const newM = vacation.id + vacation.name + vacation.company + 'Employer refuse your responce'
-        const notices = notice.notices || []
-        const newNotice = [...notices, newM]
+        await prisma.notices.create({
+            data: {
+                company: vacation.company,
+                vacationId: vacation.id,
+                employerId: userId,
+                text: 'Employer is refused your responce',
+                noticeId: notice.id
+            }
+        })
 
         await prisma.notice.update({
-            where: { employeesId: employeeId },
+            where: { id: notice.id },
             data: {
                 count: {
                     increment: 1
-                },
-                notices: newNotice
+                }
             }
         })
 
@@ -658,9 +668,13 @@ export const refuseEmployees = asyncHandler(async (req, res) => {
 
 
 export const sendMessageToEmloyee = asyncHandler(async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        res.status(400).json({ message: 'Please check your request', errors })
+    }
     const userId = parseInt(req.userId)
-    const id = parseInt(req.params)
-    const employeeId = parseInt(req.params)
+    const id = parseInt(req.params.id)
+    const employeeId = parseInt(req.params.employeeId)
     const { text } = req.body
 
     try {
@@ -674,71 +688,72 @@ export const sendMessageToEmloyee = asyncHandler(async (req, res) => {
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
+            return
         }
 
         const employee = await prisma.employees.findUnique({
-            where: { id: employeeId }
+            where: { id: employeeId },
+            include: { responces: true }
         })
         if (!employee) {
             res.status(404).json({ message: 'Employee is not found' })
+            return
         }
 
-        const notice = await prisma.notice.findUnique({
-            where: { employeesId: employeeId }
+        const notice = await prisma.notice.findFirst({
+            where: { employeesId: employeeId },
+            include: { notices: true }
         })
         if (!notice) {
             res.status(404).json({ message: 'Notice is not found' })
+            return
         }
 
-        const employer = await prisma.employer.findUnique({
-            where: { id: userId }
-        })
-        if (!employer) {
-            res.status(404).json({ message: 'Please check your token' })
+        const isHave = vacation.responces.some(employee => employee.id === employeeId)
+        if (!isHave) {
+            res.status(404).json({ message: 'Employee is not responced' })
+            return
         }
 
-        const isOwner = vacation.employerId.toString() === userId
+        const isOwner = vacation.employerId === userId
         if (!isOwner) {
             res.status(400).json({ message: 'You have not right for this' })
+            return
         }
 
         const chat = await prisma.chat.create({
             data: { employerId: userId, employeesId: employeeId }
         })
 
-        const messages = chat.messages || []
-        const newM = await prisma.message.create({
+        await prisma.notices.create({
             data: {
-                text: text,
+                company: vacation.company,
                 employerId: userId,
-                chatId: chat.id
+                noticeId: notice.id,
+                vacationId: vacation.id,
+                text: 'Employer Approved your responce'
             }
         })
 
-        await prisma.chat.update({
-            where: { id: chat.id },
+        await prisma.notice.update({
+            where: { id: notice.id },
             data: {
-                messages: {
-                    connect: { id: newM.id }
+                count: {
+                    increment: 1
                 }
             }
         })
 
-        const notices = notice.notices || []
-        const newN = employer.id + employer.name + 'Send a message to you'
-        const newNotice = [...notices, newN]
-
-        await prisma.notice.update({
-            where: { employeesId: employeeId },
+        await prisma.message.create({
             data: {
-                count: {
-                    increment: 1
-                },
-                notices: newNotice
+                chatId: chat.id,
+                owner: 'Employer',
+                ownerId: userId,
+                text: text
             }
         })
 
-        res.status(200).json({ messages: 'Message is sended' })
+        res.status(200).json({ messages: 'Employee is Approved Successfully' })
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry Error in Server' })

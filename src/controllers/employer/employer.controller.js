@@ -2,7 +2,9 @@ import asyncHandler from 'express-async-handler'
 import { validationResult } from 'express-validator'
 import prisma from '../../db/prisma.js'
 import { generateToken } from '../../utils/generatorTokens.js'
+import { sendSMS, datas  } from '../../services/eskiz.service.js'
 import bcrypt from 'bcrypt'
+
 
 
 export const signUp = asyncHandler(async (req, res) => {
@@ -10,11 +12,11 @@ export const signUp = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { name, email, password } = req.body
+    const { name, phone, password } = req.body
 
     try {
         const isHave = await prisma.employer.findUnique({
-            where: { email: email }
+            where: { phone: phone }
         })
         if (isHave) {
             res.status(400).json({ message: 'Employer is already exist' })
@@ -22,14 +24,54 @@ export const signUp = asyncHandler(async (req, res) => {
 
         const hash = bcrypt.hashSync(password, 7)
         const employer = await prisma.employer.create({
-            data: { name, email, password: hash }
+            data: { name, phone, password: hash }
         })
 
-        const token = generateToken(employer.id)
-        res.status(200).json({ message: 'Employer is Signed', token })
+        sendSMS(datas, phone)
+        res.status(200).json({ message: 'Go throught otp'})
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
+    }
+})
+
+
+export const authVerify = asyncHandler(async(req, res) => {
+    const errors = validationResult(req)
+    if(!errors.isEmpty()) {
+        res.status(400).json({message: 'Please check your request', errors})
+    }
+    const {phone,code} = req.body
+    
+    try {
+        const employer = await prisma.employer.findUnique({
+            where: {
+                phone: phone
+            }
+        })
+
+        const eskiz = await prisma.otp.findFirst({
+            where: {
+                phone: phone
+            }
+        })
+        if(!eskiz) {
+            res.status(400).json({message: 'The Eskiz code time is end'})
+            return
+        }
+
+        const eskizCode = eskiz.code
+        const isCode = code === eskizCode
+        if(!isCode) {
+            res.status(400).json({message: 'Code is not correct'})
+            return
+        }
+
+        const token = generateToken(employer.id)
+        res.status(200).json({message: 'Employer is authorized successfully', token})
+    } catch(error) {
+        console.log(error)
+        res.status(500).json({message: 'Sorry Error in Server'})
     }
 })
 

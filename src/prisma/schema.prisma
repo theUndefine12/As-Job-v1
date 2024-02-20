@@ -9,16 +9,14 @@ datasource db {
 
 model Employees {
   id             Int         @id @default(autoincrement())
-  email          String      @unique
-  name           String?
+  name           String
   password       String
   responcesCount Int         @default(0)
   country        String
-  phone          String
+  phone          String      @unique @default("")
   gender         Gender
   Chat           Chat[]
   Favorites      Favorites[]
-  Message        Message[]
   Notice         Notice[]
   resume         Resume[]
   Review         Review[]
@@ -28,19 +26,32 @@ model Employees {
 model Notice {
   id          Int       @id @default(autoincrement())
   count       Int       @default(0)
-  notices     String[]
   employeesId Int
   owner       Employees @relation(fields: [employeesId], references: [id])
+  notices     Notices[]
+}
+
+model Notices {
+  id         Int      @id @default(autoincrement())
+  company    String
+  text       String
+  employerId Int
+  vacationId Int
+  noticeId   Int?
+  createdAt  DateTime @default(now())
+  employer   Employer @relation(fields: [employerId], references: [id])
+  Notice     Notice?  @relation(fields: [noticeId], references: [id])
+  vacation   Vacation @relation(fields: [vacationId], references: [id])
 }
 
 model Employer {
   id             Int        @id @default(autoincrement())
-  name           String?
-  email          String     @unique
+  name           String
   password       String
   vacationsCount Int        @default(0)
+  phone          String     @unique @default("")
   Chat           Chat[]
-  Message        Message[]
+  Notices        Notices[]
   vacations      Vacation[]
 }
 
@@ -93,6 +104,7 @@ model Vacation {
   adresse        String
   requirements   String[]
   conditions     String[]
+  Notices        Notices[]
   reviews        Review[]
   direction      Direction?  @relation(fields: [directionId], references: [id])
   employer       Employer?   @relation(fields: [employerId], references: [id])
@@ -135,25 +147,42 @@ model Chat {
   id          Int       @id @default(autoincrement())
   employerId  Int
   employeesId Int
+  createdAt   DateTime  @default(now())
   employee    Employees @relation(fields: [employeesId], references: [id])
   employer    Employer  @relation(fields: [employerId], references: [id])
   messages    Message[]
 }
 
 model Message {
-  id          Int       @id @default(autoincrement())
-  text        String
-  viewed      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  chatId      Int?
-  employerId  Int
-  employeesId Int
-  Chat        Chat?     @relation(fields: [chatId], references: [id])
-  employee    Employees @relation(fields: [employeesId], references: [id])
-  employer    Employer  @relation(fields: [employerId], references: [id])
+  id        Int      @id @default(autoincrement())
+  text      String
+  viewed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  chatId    Int?
+  owner     Owner
+  ownerId   Int
+  Chat      Chat?    @relation(fields: [chatId], references: [id])
+}
+
+model Otp {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique
+  code      String
+  createdAt DateTime @default(now())
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
 }
 
 enum Gender {
   Male
   Female
+}
+
+enum Owner {
+  Employees
+  Employer
 }

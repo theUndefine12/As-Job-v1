@@ -2,7 +2,10 @@ import asyncHandler from 'express-async-handler'
 import { validationResult } from 'express-validator'
 import prisma from '../../db/prisma.js'
 import { generateToken } from '../../utils/generatorTokens.js'
+import { sendSMS, datas  } from '../../services/eskiz.service.js'
 import bcrypt from 'bcrypt'
+
+
 
 
 export const signUp = asyncHandler(async (req, res) => {
@@ -33,11 +36,51 @@ export const signUp = asyncHandler(async (req, res) => {
             data: { employeesId: employees.id }
         })
 
-        const token = generateToken(employees.id)
-        res.status(200).json({ message: 'Employees is Saved', token })
+        await sendSMS(datas, phone)
+        res.status(200).json({ message: 'Go through otp' })
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
+    }
+})
+
+
+export const authVerify = asyncHandler(async(req, res) => {
+    const errors = validationResult(req)
+    if(!errors.isEmpty()) {
+        res.status(400).json({message: 'Please check your request', errors})
+    }
+    const {phone,code} = req.body
+    
+    try {
+        const employee = await prisma.employees.findFirst({
+            where: {
+                phone: phone
+            }
+        })
+
+        const eskiz = await prisma.otp.findFirst({
+            where: {
+                phone: phone
+            }
+        })
+        if(!eskiz) {
+            res.status(400).json({message: 'The Eskiz code time is end'})
+            return
+        }
+
+        const eskizCode = eskiz.code
+        const isCode = code === eskizCode
+        if(!isCode) {
+            res.status(400).json({message: 'Code is not correct'})
+            return
+        }
+
+        const token = generateToken(employee.id)
+        res.status(200).json({message: 'Employee is authorized successfully', token})
+    } catch(error) {
+        console.log(error)
+        res.status(500).json({message: 'Sorry Error in Server'})
     }
 })
 

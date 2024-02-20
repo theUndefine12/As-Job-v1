@@ -1,7 +1,7 @@
 import express from 'express'
 import 'colors'
 import dotenv from 'dotenv'
-import mainRoutes from './routes/main.js'
+import mainRoutes from './routes/main.routes.js'
 
 dotenv.config()
 

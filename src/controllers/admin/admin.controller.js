@@ -95,7 +95,8 @@ export const getEmployer = asyncHandler(async (req, res) => {
 
 export const getAllVAcations = asyncHandler(async (req, res) => {
     const vacations = await prisma.vacation.findMany({
-        select: { id: true, name: true, salary: true, company: true, proffesion: true }
+        select: { id: true, name: true, salary: true, company: true, proffesion: true },
+        orderBy: { createdAt: 'asc' }
     })
     res.status(200).json({ vacations })
 })

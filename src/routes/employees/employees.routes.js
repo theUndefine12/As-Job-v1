@@ -1,7 +1,7 @@
 import epxress from 'express'
 import { check } from 'express-validator'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
-import { getProfile, myResponces, signIn, signUp, update } from '../../controllers/employees/employees.controller.js'
+import { authVerify, getProfile, myResponces, signIn, signUp, update } from '../../controllers/employees/employees.controller.js'
 import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
 
@@ -19,6 +19,15 @@ router.route('/signup').post(
     ],
     signUp
 )
+
+router.route('/verify').post(
+    [
+        check('phone', 'Phone is required').notEmpty(),
+        check('code', 'Code is required').notEmpty()
+    ],
+    authVerify
+)
+
 router.route('/signin').post(
     [
         check('email', 'Email is required').notEmpty(),
@@ -29,8 +38,8 @@ router.route('/signin').post(
 router.route('/update').put(
     [
         check('name', 'Name is required').optional().notEmpty(),
-        check('email', 'Name is required').optional().notEmpty(),
-        check('country', 'Name is required').optional().notEmpty(),
+        check('email', 'Email is required').optional().notEmpty(),
+        check('country', 'Country is required').optional().notEmpty(),
         check('phone', 'Phone is required').optional().notEmpty(),
         check('password', 'Password is required and need be minimum 8').optional().isLength({ min: 8 })
     ],
@@ -39,6 +48,7 @@ router.route('/update').put(
 
 router.route('/profile').get(authSecurity, getProfile)
 router.route('/responces').get(authSecurity, checkEmployees, myResponces)
+
 
 
 export default router

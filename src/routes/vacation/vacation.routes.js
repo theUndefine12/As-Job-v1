@@ -59,8 +59,15 @@ router.route('/:id/add-reviewe').post(
 )
 
 router.route('/:id/responces').get(authSecurity, checkEmployer, getResponces)
+
 router.route('/:id/responces/:employeeId/refuse').post(authSecurity, checkEmployer, refuseEmployees)
-router.route('/:id/:employeeId/approve').post(authSecurity, checkEmployer, sendMessageToEmloyee)
+router.route('/:id/responces/:employeeId/approve').post(
+    [
+        check('text', 'Text is required').notEmpty()
+    ],
+    authSecurity, checkEmployer, sendMessageToEmloyee
+)
+
 router.route('/:id').delete(authSecurity, checkEmployer, deleteVacation)
 
 export default router

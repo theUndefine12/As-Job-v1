@@ -1,7 +1,7 @@
 import epxress from 'express'
 import { check } from 'express-validator'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
-import { getProfile, signIn, signUp } from '../../controllers/employer/employer.controller.js'
+import { authVerify, getProfile, signIn, signUp } from '../../controllers/employer/employer.controller.js'
 
 
 
@@ -15,6 +15,15 @@ router.route('/signup').post(
     ],
     signUp
 )
+
+router.route('/verify').post(
+    [
+        check('phone', 'Phone is required').notEmpty(),
+        check('code', 'Code is required').notEmpty()
+    ],
+    authVerify
+)
+
 router.route('/signin').post(
     [
         check('email', 'Email is required').notEmpty(),
