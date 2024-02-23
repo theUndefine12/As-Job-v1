@@ -10,7 +10,7 @@ export const createVacation = asyncHandler(async (req, res) => {
         res.status(400).json({ message: 'Please check your request', errors })
     }
     const userId = parseInt(req.userId)
-    const { name, proffesion, salary, description, direction, contacts, company, conditions, requirements, adresse } = req.body
+    const { name, profession, salary, description, direction, contacts, company, conditions, requirements, adresse } = req.body
 
     try {
         const isHave = await prisma.vacation.findFirst({
@@ -28,7 +28,7 @@ export const createVacation = asyncHandler(async (req, res) => {
         }
 
         const vacation = await prisma.vacation.create({
-            data: { name, proffesion, salary, description, directionId: isDirection.id, employerId: userId, contacts, company, conditions, requirements, adresse }
+            data: { name, profession, salary, description, directionId: isDirection.id, employerId: userId, contacts, company, conditions, requirements, adresse }
         })
 
         await prisma.employer.update({
@@ -69,7 +69,7 @@ export const getVacation = asyncHandler(async (req, res) => {
     try {
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { name: true, salary: true, company: true, description: true, proffesion: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
+            select: { name: true, salary: true, company: true, description: true, profession: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -79,25 +79,6 @@ export const getVacation = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry Error in Server' })
-    }
-})
-
-export const myVacations = asyncHandler(async (req, res) => {
-    const userId = parseInt(req.userId)
-
-    try {
-        const vacations = await prisma.vacation.findMany({
-            where: { employerId: userId },
-            select: { id: true, name: true, salary: true, company: true },
-            orderBy: { createdAt: 'asc' }
-        })
-        if (!vacations) {
-            res.status(404).json({ message: 'Vacation is not found' })
-        }
-
-        res.status(200).json({ vacations })
-    } catch (error) {
-        res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
 
@@ -117,7 +98,7 @@ export const likeVacation = asyncHandler(async (req, res) => {
 
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { contacts: false }
+            select: { name: true, salary: true, company: true, description: true, profession: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -163,7 +144,7 @@ export const unlikeVacation = asyncHandler(async (req, res) => {
 
         const vacation = await prisma.vacation.findUnique({
             where: { id: id },
-            select: { contacts: false }
+            select: { name: true, salary: true, company: true, description: true, profession: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
@@ -356,8 +337,10 @@ export const putReview = asyncHandler(async (req, res) => {
         }
 
         const vacation = await prisma.vacation.findUnique({
-            where: { id: id }
+            where: { id: id },
+            select: { name: true, salary: true, company: true, description: true, profession: true, adresse: true, conditions: true, requirements: true, responcesCount: true }
         })
+        
         if (!vacation) {
             res.status(404).json({ message: 'Vacation is not found' })
         }

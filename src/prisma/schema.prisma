@@ -10,11 +10,13 @@ datasource db {
 model Employees {
   id             Int         @id @default(autoincrement())
   name           String
-  password       String
-  responcesCount Int         @default(0)
-  country        String
   phone          String      @unique @default("")
+  password       String
+  profession     String
+  country        String
   gender         Gender
+  isResume       Boolean     @default(false)
+  responcesCount Int         @default(0)
   Chat           Chat[]
   Favorites      Favorites[]
   Notice         Notice[]
@@ -47,9 +49,9 @@ model Notices {
 model Employer {
   id             Int        @id @default(autoincrement())
   name           String
+  phone          String     @unique @default("")
   password       String
   vacationsCount Int        @default(0)
-  phone          String     @unique @default("")
   Chat           Chat[]
   Notices        Notices[]
   vacations      Vacation[]
@@ -94,7 +96,7 @@ model Vacation {
   favoritesId    Int?
   description    String
   name           String
-  proffesion     String
+  profession     String
   salary         Int
   responcesCount Int         @default(0)
   createdAt      DateTime    @default(now())
@@ -130,6 +132,7 @@ model Resume {
   profession  String
   contacts    String
   country     String
+  links       String[]
   employeesId Int
   createdAt   DateTime  @default(now())
   owner       Employees @relation(fields: [employeesId], references: [id])
@@ -144,13 +147,14 @@ model Favorites {
 }
 
 model Chat {
-  id          Int       @id @default(autoincrement())
-  employerId  Int
-  employeesId Int
-  createdAt   DateTime  @default(now())
-  employee    Employees @relation(fields: [employeesId], references: [id])
-  employer    Employer  @relation(fields: [employerId], references: [id])
-  messages    Message[]
+  id            Int       @id @default(autoincrement())
+  employerId    Int
+  employeesId   Int
+  createdAt     DateTime  @default(now())
+  messagesCount Int       @default(0)
+  employee      Employees @relation(fields: [employeesId], references: [id])
+  employer      Employer  @relation(fields: [employerId], references: [id])
+  messages      Message[]
 }
 
 model Message {
@@ -160,7 +164,6 @@ model Message {
   createdAt DateTime @default(now())
   chatId    Int?
   owner     Owner
-  ownerId   Int
   Chat      Chat?    @relation(fields: [chatId], references: [id])
 }
 
@@ -168,12 +171,6 @@ model Otp {
   id        Int      @id @default(autoincrement())
   phone     String   @unique
   code      String
-  createdAt DateTime @default(now())
-}
-
-model Todo {
-  id        Int      @id @default(autoincrement())
-  name      String
   createdAt DateTime @default(now())
 }
 

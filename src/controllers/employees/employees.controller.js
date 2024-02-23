@@ -13,11 +13,11 @@ export const signUp = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { name, email, country, gender, phone, password } = req.body
+    const { name, country, gender, phone, password } = req.body
 
     try {
         const isHave = await prisma.employees.findUnique({
-            where: { email: email }
+            where: {phone: phone }
         })
         if (isHave) {
             res.status(400).json({ message: 'Employees is already exist' })
@@ -25,7 +25,7 @@ export const signUp = asyncHandler(async (req, res) => {
 
         const hash = bcrypt.hashSync(password, 7)
         const employees = await prisma.employees.create({
-            data: { name, email, country, phone, gender, password: hash }
+            data: { name, country, phone, gender, password: hash }
         })
 
         await prisma.favorites.create({
@@ -90,11 +90,11 @@ export const signIn = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { email, password } = req.body
+    const { phone, password } = req.body
 
     try {
         const employees = await prisma.employees.findUnique({
-            where: { email }
+            where: { phone: phone }
         })
         if (!employees) {
             res.status(404).json({ message: 'Employees is not Found' })
@@ -119,7 +119,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     try {
         const employees = await prisma.employees.findUnique({
             where: { id: userId },
-            select: { name: true, email: true, country: true, phone: true, responcesCount: true },
+            select: { name: true, country: true, phone: true, responcesCount: true, isResume: true },
         })
         if (!employees) {
             res.status(404).json({ message: 'Admin is not Found' })
@@ -178,5 +178,34 @@ export const myResponces = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry error in Server' })
+    }
+})
+
+
+export const getEmployees = asyncHandler(async(req, res) => {
+    const employees = await prisma.employees.findMany({
+        select: {id: true, name: true, profession: true, country: true}
+    })
+
+    res.status(200).json({employees})
+})
+
+
+export const getEmployee = asyncHandler(async(req, res) => {
+    const id = parseInt(req.params.id)
+
+    try {
+        const employee = await prisma.employees.findUnique({
+            where: {id: id},
+            select: {id: true, name: true, phone: true, profession: true, country: true, gender: true, isResume: true}
+        })
+        if(!employee) {
+            res.status(404).json({message: 'User is not found'})
+        }
+
+        res.status(200).json({employee})
+    } catch(error) {
+        console.log(error)
+        res.status(500).json({message: 'Sorry Error in Server'})
     }
 })

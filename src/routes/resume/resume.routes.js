@@ -1,7 +1,7 @@
 import express from 'express'
 import { check } from 'express-validator'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
-import { create, deleted, get, update } from '../../controllers/resume/resume.controller.js'
+import { create, deleted, get, sendResume, update } from '../../controllers/resume/resume.controller.js'
 import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
 
@@ -32,6 +32,7 @@ router.route('/').put(
 )
 
 router.route('/').get(authSecurity, checkEmployees, get)
+router.route('/send/:id').post(authSecurity, checkEmployees, sendResume)
 router.route('/').delete(authSecurity, checkEmployees, deleted)
 
 export default router

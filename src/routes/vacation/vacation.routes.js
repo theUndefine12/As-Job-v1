@@ -2,7 +2,7 @@ import express from 'express'
 import { check } from 'express-validator'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
 import { checkEmployer } from '../../Middlewares/employer.middleware.js'
-import { createVacation, deleteVacation, getResponces, getReviews, getVacation, likeVacation, myVacations, putReview, refuseEmployees, responce, sendMessageToEmloyee, showContacts, unResponce, unlikeVacation, updateVacation } from '../../controllers/vacation/vacation.controller.js'
+import { createVacation, deleteVacation, getResponces, getReviews, getVacation, likeVacation, putReview, refuseEmployees, responce, sendMessageToEmloyee, showContacts, unResponce, unlikeVacation, updateVacation } from '../../controllers/vacation/vacation.controller.js'
 import { getAllVAcations } from '../../controllers/admin/admin.controller.js'
 import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
@@ -48,8 +48,6 @@ router.route('/:id/responce').post(authSecurity, checkEmployees, responce)
 router.route('/:id/unresponce').post(authSecurity, checkEmployees, unResponce)
 router.route('/:id/contacts').get(authSecurity, showContacts)
 router.route('/:id/reviews').get(authSecurity, getReviews)
-
-router.route('/my/vacations').get(authSecurity, checkEmployer, myVacations)
 
 router.route('/:id/add-reviewe').post(
     [

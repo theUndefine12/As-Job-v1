@@ -1,7 +1,7 @@
 import epxress from 'express'
 import { check } from 'express-validator'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
-import { authVerify, getProfile, myResponces, signIn, signUp, update } from '../../controllers/employees/employees.controller.js'
+import { authVerify, getEmployee, getEmployees, getProfile, myResponces, signIn, signUp, update } from '../../controllers/employees/employees.controller.js'
 import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
 
@@ -11,10 +11,9 @@ const router = epxress.Router()
 router.route('/signup').post(
     [
         check('name', 'Name is required').notEmpty(),
-        check('email', 'Name is required').notEmpty(),
         check('country', 'Name is required').notEmpty(),
         check('phone', 'Phone is required').notEmpty(),
-        check('gender', 'Gender is required').notEmpty(),
+        check('gender', 'Gender is required and need be Male or Female').notEmpty(),
         check('password', 'Password is required and need be minimum 8').isLength({ min: 8 })
     ],
     signUp
@@ -30,7 +29,7 @@ router.route('/verify').post(
 
 router.route('/signin').post(
     [
-        check('email', 'Email is required').notEmpty(),
+        check('phone', 'Phone is required').notEmpty(),
         check('password', 'Password is required and need be minimum 8').isLength({ min: 8 })
     ],
     signIn
@@ -48,7 +47,8 @@ router.route('/update').put(
 
 router.route('/profile').get(authSecurity, getProfile)
 router.route('/responces').get(authSecurity, checkEmployees, myResponces)
-
+router.route('/').get(getEmployees)
+router.route('/:id').get(authSecurity, getEmployee)
 
 
 export default router

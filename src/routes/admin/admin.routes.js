@@ -3,6 +3,7 @@ import { check } from 'express-validator'
 import { getAllVAcations, getEmployees, getEmployer, getProfile, signIn, signUp } from '../../controllers/admin/admin.controller.js'
 import { authSecurity } from '../../Middlewares/auth.middleware.js'
 import { checkAdmin } from '../../Middlewares/admin.middleware.js.js'
+import { checkEmployees } from '../../Middlewares/employees.middleware.js'
 
 
 
@@ -22,11 +23,11 @@ router.route('/signin').post(
     ],
     signIn
 )
-router.route('/profile').get(authSecurity, getProfile)
+router.route('/profile').get(authSecurity,checkAdmin, getProfile)
 
-router.route('/employees').get(checkAdmin, getEmployees)
-router.route('/employeers').get(checkAdmin, getEmployer)
-router.route('/vacations').get(checkAdmin, getAllVAcations)
+router.route('/employees').get(authSecurity,checkAdmin, getEmployees)
+router.route('/employeers').get(authSecurity,checkAdmin, getEmployer)
+router.route('/vacations').get(authSecurity,checkAdmin, getAllVAcations)
 
 
 

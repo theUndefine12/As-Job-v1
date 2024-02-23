@@ -8,21 +8,36 @@ export const getChats = asyncHandler(async (req, res) => {
     const userId = parseInt(req.userId)
 
     try {
-        const chats = await prisma.chat.findMany({
-            where: {
-                OR: [
-                    { AND: { employeesId: userId } },
-                    { AND: { employerId: userId } }
-                ]
-            },
-            select: { id: true, createdAt: true }
+        const isEmployee = await prisma.employees.findUnique({
+            where: {id: userId}
         })
-        if (!chats) {
-            res.status(404).json({ message: 'Chats is not found' })
+
+        const isEmployer = await prisma.employer.findUnique({
+            where: {id: userId}
+        })
+
+        if(isEmployee) {
+            const chats = await prisma.chat.findMany({
+                select: {id: true, employer: {
+                    select: {id: true, name: true},
+                }, createdAt: true},
+            })
+
+            res.status(200).json({message: 'You are a Employee ---', chats})
             return
         }
 
-        res.status(200).json({ chats })
+        if(isEmployer) {
+            const chats = await prisma.chat.findMany({
+                where: {employerId: userId},
+                select: {id: true, employee: {
+                    select: {id: true, name: true}
+                }, createdAt: true}
+            })
+
+            res.status(200).json({chats})
+            return
+        }
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry Error in Server' })
@@ -44,18 +59,9 @@ export const getChat = asyncHandler(async (req, res) => {
         })
 
         const chat = await prisma.chat.findUnique({
-            where: { id: id },
-            include: {
-                messages: {
-                    select: { id: true, ownerId: true, owner: true, text: true, viewed: true, createdAt: true },
-                    orderBy: { createdAt: 'asc' }
-                }
-            }
+            where: {id: id},
+            include: {messages: true}
         })
-        if (!chat) {
-            res.status(404).json({ message: 'Chat is not found' })
-            return
-        }
 
         let owner
         if (isEmployee) {
@@ -79,7 +85,42 @@ export const getChat = asyncHandler(async (req, res) => {
             }
         })
 
-        res.status(200).json({ chat })
+        if(isEmployee) {
+            const chat = await prisma.chat.findUnique({
+                where: {id: id},
+                select: {employer: {
+                    select: {id: true, name: true}
+                },
+                messagesCount: true,
+                messages: {
+                    select: {id: true, owner: true, text: true, viewed: true, createdAt: true}
+                }
+            }
+            })
+            
+            res.status(200).json({messages: 'Employee ---', chat})
+            return
+        }
+
+        if(isEmployer) {
+            const chat = await prisma.chat.findUnique({
+                where: {id: id},
+                select: {employee: {
+                    select: {id: true, name: true}
+                },
+                messagesCount: true,
+                messages: {
+                    select: {id: true, owner: true, text: true, viewed :true, createdAt: true}
+                }
+            }
+            })
+
+            res.status(200).json({messages: 'Employer +++',chat})
+            return
+        }
+
+
+        res.status(400).json({messages: 'Error xxxxx'})
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: 'Sorry Error in Server' })
@@ -97,7 +138,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     const { text } = req.body
 
     try {
-        let owner
         const isEmployee = await prisma.employees.findUnique({
             where: { id: userId }
         })
@@ -136,6 +176,15 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
         await prisma.message.create({
             data: newMsg
+        })
+
+        await prisma.chat.update({
+            where: {id: id},
+            data: {
+                messagesCount: {
+                    increment: 1
+                }
+            }
         })
 
         const updated = await prisma.chat.findUnique({

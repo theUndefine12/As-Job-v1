@@ -81,11 +81,11 @@ export const signIn = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { email, password } = req.body
+    const { phone, password } = req.body
 
     try {
         const employer = await prisma.employer.findUnique({
-            where: { email }
+            where: { phone: phone }
         })
         if (!employer) {
             res.status(404).json({ message: 'Employer is not Found' })
@@ -111,7 +111,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     try {
         const employer = await prisma.employer.findUnique({
             where: { id: userId },
-            select: { name: true, email: true, vacationsCount: true }
+            select: { name: true, phone: true, vacationsCount: true }
         })
         if (!employer) {
             res.status(404).json({ message: 'Employer is not Found' })
@@ -124,3 +124,28 @@ export const getProfile = asyncHandler(async (req, res) => {
     }
 })
 
+
+export const myVacations = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || 1
+    const userId = parseInt(req.userId)
+
+    try {
+        const pageSize = 5
+        const skip = (page - 1) * pageSize
+
+        const vacations = await prisma.vacation.findMany({
+            where: { employerId: userId },
+            select: { id: true, name: true, salary: true, company: true },
+            orderBy: { createdAt: 'asc' },
+            skip: skip,
+            take: pageSize
+        })
+        if (!vacations) {
+            res.status(404).json({ message: 'Vacation is not found' })
+        }
+
+        res.status(200).json({ vacations })
+    } catch (error) {
+        res.status(500).json({ message: 'Sorry error in Server' })
+    }
+})
