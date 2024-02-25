@@ -281,6 +281,13 @@ export const clearHistory = asyncHandler(async (req, res) => {
             where: { id: { in: msgs } }
         })
 
+        await prisma.chat.update({
+            where: {id: id},
+            data: {
+                messagesCount: 0
+            }
+        })
+
         res.status(200).json({ message: 'Chat is Cleaned' })
     } catch (error) {
         console.log(error)

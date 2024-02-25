@@ -26,7 +26,7 @@ const authenticate = async () => {
     const data = await res.json()
     return data
   } catch (error) {
-    throw new Error(`Error during authentication: ${error.message}`)
+    console.log(`Error during authentication: ${error.message}`)
   }
 }
 

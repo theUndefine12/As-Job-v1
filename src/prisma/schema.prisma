@@ -10,13 +10,13 @@ datasource db {
 model Employees {
   id             Int         @id @default(autoincrement())
   name           String
-  phone          String      @unique @default("")
   password       String
-  profession     String
+  responcesCount Int         @default(0)
   country        String
+  phone          String      @unique @default("")
   gender         Gender
   isResume       Boolean     @default(false)
-  responcesCount Int         @default(0)
+  profession     String
   Chat           Chat[]
   Favorites      Favorites[]
   Notice         Notice[]
@@ -49,9 +49,9 @@ model Notices {
 model Employer {
   id             Int        @id @default(autoincrement())
   name           String
-  phone          String     @unique @default("")
   password       String
   vacationsCount Int        @default(0)
+  phone          String     @unique @default("")
   Chat           Chat[]
   Notices        Notices[]
   vacations      Vacation[]
@@ -96,7 +96,6 @@ model Vacation {
   favoritesId    Int?
   description    String
   name           String
-  profession     String
   salary         Int
   responcesCount Int         @default(0)
   createdAt      DateTime    @default(now())
@@ -106,6 +105,7 @@ model Vacation {
   adresse        String
   requirements   String[]
   conditions     String[]
+  profession     String
   Notices        Notices[]
   reviews        Review[]
   direction      Direction?  @relation(fields: [directionId], references: [id])
@@ -132,9 +132,9 @@ model Resume {
   profession  String
   contacts    String
   country     String
-  links       String[]
   employeesId Int
   createdAt   DateTime  @default(now())
+  links       String[]
   owner       Employees @relation(fields: [employeesId], references: [id])
 }
 
@@ -162,9 +162,10 @@ model Message {
   text      String
   viewed    Boolean  @default(false)
   createdAt DateTime @default(now())
-  chatId    Int?
+  chatId    Int
+  ownerId   Int
   owner     Owner
-  Chat      Chat?    @relation(fields: [chatId], references: [id])
+  Chat      Chat     @relation(fields: [chatId], references: [id])
 }
 
 model Otp {

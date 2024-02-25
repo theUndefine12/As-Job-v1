@@ -31,7 +31,7 @@ export const filterEntities = asyncHandler(async (req, res) => {
                                 where: directionFilter,
                                 include: {
                                     vacations: {
-                                        select: { id: true, name: true, proffesion: true, company: true, salary: true }
+                                        select: { id: true, name: true, profession: true, company: true, salary: true }
                                     }
                                 }
                             }

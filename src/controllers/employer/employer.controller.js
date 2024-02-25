@@ -149,3 +149,51 @@ export const myVacations = asyncHandler(async (req, res) => {
         res.status(500).json({ message: 'Sorry error in Server' })
     }
 })
+
+
+export const sendMessage = asyncHandler(async(req, res) => {
+    const id = parseInt(req.params.id)
+    const userId = parseInt(req.userId)
+    const {text} = req.body
+
+    try {
+        const employee = await prisma.employees.findUnique({
+            where: {id: id}
+        })
+        if(!employee) {
+            res.status(404).json({message: 'Employee is not found'})
+        }
+
+        const chat = await prisma.chat.create({
+            data: {
+                employerId: userId,
+                employeesId: id
+            }
+        })
+
+        const newMsg = {
+            chatId: chat.id,
+            owner: 'Employer',
+            ownerId: userId,
+            text: text
+        }
+
+        await prisma.message.create({
+            data: newMsg
+        })
+
+        await prisma.chat.update({
+            where: {id: chat.id},
+            data: {
+                messagesCount: {
+                    increment: 1
+                }
+            }
+        })
+
+        res.status(200).json({message: 'Sms is sended'})
+    } catch(error) {
+        console.log(error)
+        res.status(500).json({message: 'Sorry Error in Server'})
+    }
+})

@@ -11,7 +11,7 @@ export const searcVacation = asyncHandler(async (req, res) => {
             where: {
                 name: vacationName
             },
-            select: { id: true, name: true, salary: true, proffesion: true, company: true }
+            select: { id: true, name: true, salary: true, profession: true, company: true }
         })
 
         if (vacations.length === 0) {

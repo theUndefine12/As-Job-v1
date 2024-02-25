@@ -20,10 +20,11 @@ export const create = asyncHandler(async (req, res) => {
             res.status(400).json({ message: 'Resume is created' })
         }
 
-        const toArray = contacts.join(', ')
+        const contactsArray = contacts.join(', ')
+        // const linksArray = links.join(', ')
 
         const resume = await prisma.resume.create({
-            data: { name, surname, bio, profession, contacts: toArray, country, employeesId: userId, links: toArray }
+            data: { name, surname, bio, profession, contacts: contactsArray, country, employeesId: userId, links }
         })
 
         await prisma.employees.update({

@@ -100,7 +100,7 @@ export const getAllVAcations = asyncHandler(async (req, res) => {
     const skip = (page - 1) * pageSize
 
     const vacations = await prisma.vacation.findMany({
-        select: { id: true, name: true, salary: true, company: true, proffesion: true },
+        select: { id: true, name: true, salary: true, company: true, profession: true },
         orderBy: { createdAt: 'asc' },
         skip: skip,
         take: pageSize

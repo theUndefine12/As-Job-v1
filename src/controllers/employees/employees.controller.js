@@ -13,7 +13,7 @@ export const signUp = asyncHandler(async (req, res) => {
     if (!errors.isEmpty()) {
         res.status(400).json({ message: 'Please check your request', errors })
     }
-    const { name, country, gender, phone, password } = req.body
+    const { name, country, gender, phone, profession, password } = req.body
 
     try {
         const isHave = await prisma.employees.findUnique({
@@ -25,7 +25,7 @@ export const signUp = asyncHandler(async (req, res) => {
 
         const hash = bcrypt.hashSync(password, 7)
         const employees = await prisma.employees.create({
-            data: { name, country, phone, gender, password: hash }
+            data: { name, country, phone, profession, gender, password: hash }
         })
 
         await prisma.favorites.create({
@@ -166,7 +166,7 @@ export const myResponces = asyncHandler(async (req, res) => {
             where: { id: userId },
             select: {
                 responcesCount: true, responces: {
-                    select: { id: true, name: true, salary: true, proffesion: true, company: true }
+                    select: { id: true, name: true, salary: true, profession: true, company: true }
                 }
             }
         })
@@ -197,7 +197,17 @@ export const getEmployee = asyncHandler(async(req, res) => {
     try {
         const employee = await prisma.employees.findUnique({
             where: {id: id},
-            select: {id: true, name: true, phone: true, profession: true, country: true, gender: true, isResume: true}
+            select: {id: true, name: true, phone: true, profession: true, country: true, gender: true, isResume: true, resume: {
+                select :{
+                    name: true,
+                    surname: true,
+                    bio: true,
+                    profession: true,
+                    contacts: true,
+                    country: true,
+                    links: true
+                }
+            }}
         })
         if(!employee) {
             res.status(404).json({message: 'User is not found'})

@@ -26,7 +26,7 @@ router.route('/signin').post(
 router.route('/profile').get(authSecurity,checkAdmin, getProfile)
 
 router.route('/employees').get(authSecurity,checkAdmin, getEmployees)
-router.route('/employeers').get(authSecurity,checkAdmin, getEmployer)
+router.route('/employers').get(authSecurity,checkAdmin, getEmployer)
 router.route('/vacations').get(authSecurity,checkAdmin, getAllVAcations)
 
 

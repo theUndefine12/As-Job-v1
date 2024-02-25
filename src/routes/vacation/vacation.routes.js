@@ -13,7 +13,7 @@ router.route('/create').post(
     [
         check('name', 'Name is required').notEmpty(),
         check('description', 'Description is required').notEmpty(),
-        check('proffesion', 'Proffesion is required').notEmpty(),
+        check('profession', 'Profession is required').notEmpty(),
         check('salary', 'Salary is required').isNumeric(),
         check('company', 'Company is required').notEmpty(),
         check('contacts', 'Contacts is required').notEmpty(),
