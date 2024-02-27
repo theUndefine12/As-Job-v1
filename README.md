@@ -38,6 +38,9 @@ DATABASE_URL="postgresql://username:password@localhost:5432/dbName?schema=public
 $ npm run dev
 ```
 
+## Postman Documentation
+https://documenter.getpostman.com/view/26560018/2sA2rFQehR
+
 [appveyor-image]: https://badgen.net/appveyor/ci/dougwilson/express/master?label=windows
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/express
 [coveralls-image]: https://badgen.net/coveralls/c/github/expressjs/express/master
@@ -50,3 +53,4 @@ $ npm run dev
 [npm-install-size-url]: https://packagephobia.com/result?p=express
 [npm-url]: https://npmjs.org/package/express
 [npm-version-image]: https://badgen.net/npm/v/express
+
