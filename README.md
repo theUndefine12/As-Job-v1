@@ -39,7 +39,7 @@ $ npm run dev
 ```
 
 ## Postman Documentation
-https://documenter.getpostman.com/view/26560018/2sA2rFQehR
+[Postman](https://documenter.getpostman.com/view/26560018/2sA2rFQehR)
 
 [appveyor-image]: https://badgen.net/appveyor/ci/dougwilson/express/master?label=windows
 [appveyor-url]: https://ci.appveyor.com/project/dougwilson/express
